@@ -1,0 +1,228 @@
+// Prisma Schema - Sistema de Portaria João XXIII
+// Database: PostgreSQL - Gerencia todos os módulos do sistema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUM: Perfis de acesso (Role-Based Access Control)
+// ============================================================
+enum Role {
+  SUPERADMIN
+  COORDENACAO
+  SUPERVISAO
+  SECRETARIA
+  PORTARIA
+}
+
+// ============================================================
+// ENUM: Períodos de aula
+// ============================================================
+enum Periodo {
+  MANHA
+  TARDE
+}
+
+// ============================================================
+// ENUM: Status de chaves
+// ============================================================
+enum KeyStatus {
+  DISPONIVEL
+  EMPRESTADA
+}
+
+// ============================================================
+// ENUM: Status de agendamentos de visita
+// ============================================================
+enum VisitStatus {
+  PENDENTE
+  CONCLUIDO
+  CANCELADO
+}
+
+// ============================================================
+// ENUM: Status de fornecedor (baseado na regra de 6 meses)
+// ============================================================
+enum SupplierStatus {
+  ATIVO
+  BLOQUEADO_RENOVACAO
+}
+
+// ============================================================
+// Tabela: Usuários do Sistema
+// Gerencia autenticação e controle de acesso
+// ============================================================
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         Role     @default(PORTARIA)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  keyLogs      KeyLog[]
+  delays       Delay[]
+
+  @@map("users")
+}
+
+// ============================================================
+// Tabela: Alunos
+// Cadastro de alunos da instituição
+// ============================================================
+model Student {
+  id        String   @id @default(uuid())
+  nome      String
+  turma     String
+  periodo   Periodo
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  guardians StudentGuardian[]
+  delays    Delay[]
+
+  @@map("students")
+}
+
+// ============================================================
+// Tabela: Responsáveis
+// Cadastro de pais/responsáveis pelos alunos
+// ============================================================
+model Guardian {
+  id        String   @id @default(uuid())
+  nome      String
+  documento String   @unique
+  contato   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  students  StudentGuardian[]
+
+  @@map("guardians")
+}
+
+// ============================================================
+// Tabela Pivô: Aluno-Responsável (Relacionamento N:N)
+// ============================================================
+model StudentGuardian {
+  studentId  String @map("student_id")
+  guardianId String @map("guardian_id")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  guardian Guardian @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, guardianId])
+  @@map("student_guardians")
+}
+
+// ============================================================
+// Tabela: Visitantes
+// Registro de visitantes na portaria
+// ============================================================
+model Visitor {
+  id           String   @id @default(uuid())
+  nome         String
+  documento    String?
+  empresaMotivo String  @map("empresa_motivo")
+  fotoUrl      String?  @map("foto_url")
+  dataEntrada  DateTime @default(now()) @map("data_entrada")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("visitors")
+}
+
+// ============================================================
+// Tabela: Fornecedores
+// Cadastro com regra de renovação obrigatória a cada 6 meses
+// ============================================================
+model Supplier {
+  id                String         @id @default(uuid())
+  empresa           String
+  nomeRepresentante String         @map("nome_representante")
+  documento         String         @unique
+  fotoUrl           String?        @map("foto_url")
+  lastRenewal       DateTime       @map("last_renewal")
+  status            SupplierStatus @default(ATIVO)
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  @@map("suppliers")
+}
+
+// ============================================================
+// Tabela: Chaves
+// Cadastro de chaves de salas e setores
+// ============================================================
+model Key {
+  id         String    @id @default(uuid())
+  salaSetor  String    @map("sala_setor")
+  codigoChave String   @unique @map("codigo_chave")
+  status     KeyStatus @default(DISPONIVEL)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  logs       KeyLog[]
+
+  @@map("keys")
+}
+
+// ============================================================
+// Tabela: Log de Empréstimo de Chaves
+// Histórico completo de retirada e devolução
+// ============================================================
+model KeyLog {
+  id          String    @id @default(uuid())
+  keyId       String    @map("key_id")
+  userId      String    @map("user_id")
+  borrowedAt  DateTime  @default(now()) @map("borrowed_at")
+  returnedAt  DateTime? @map("returned_at")
+
+  key         Key       @relation(fields: [keyId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("key_logs")
+}
+
+// ============================================================
+// Tabela: Registro de Atrasos
+// Controle de entrada tardia de alunos e funcionários
+// ============================================================
+model Delay {
+  id             String    @id @default(uuid())
+  studentId      String?   @map("student_id")
+  userId         String?   @map("user_id")
+  horarioAtraso  DateTime  @default(now()) @map("horario_atraso")
+  justificativa  String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  student        Student?  @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("delays")
+}
+
+// ============================================================
+// Tabela: Agendamento de Visitas
+// Pré-agendamento de reuniões e visitas institucionais
+// ============================================================
+model VisitSchedule {
+  id              String      @id @default(uuid())
+  nomeVisitante   String      @map("nome_visitante")
+  documento       String?
+  dataHoraAgendada DateTime   @map("data_hora_agendada")
+  setorDestino    String      @map("setor_destino")
+  status          VisitStatus @default(PENDENTE)
+  observacoes     String?
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  @@map("visit_schedules")
+}
