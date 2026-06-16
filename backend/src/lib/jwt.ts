@@ -20,9 +20,11 @@ export interface JwtPayload {
  * @returns Token JWT assinado
  */
 export function generateToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
-  });
+  // Garante que expiresIn seja tratado como string para o tipo esperado
+  const options: jwt.SignOptions = {
+    expiresIn: JWT_EXPIRES_IN as string & jwt.SignOptions["expiresIn"],
+  };
+  return jwt.sign(payload, JWT_SECRET, options);
 }
 
 /**

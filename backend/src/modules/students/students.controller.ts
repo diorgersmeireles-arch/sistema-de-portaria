@@ -35,9 +35,9 @@ router.get(
       });
 
       // Formata a resposta para incluir responsáveis diretamente
-      const formatted = students.map((student) => ({
+      const formatted = (students as any[]).map((student: any) => ({
         ...student,
-        responsaveis: student.guardians.map((sg) => sg.guardian),
+        responsaveis: student.guardians.map((sg: any) => sg.guardian),
       }));
 
       res.json(formatted);

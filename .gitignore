@@ -1,0 +1,29 @@
+# Dependências
+node_modules/
+.pnp/
+.pnp.js
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Ambiente
+.env
+.env.local
+.env.production
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# Prisma (cache de migrations local)
+backend/prisma/migrations/
