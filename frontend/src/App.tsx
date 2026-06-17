@@ -15,6 +15,8 @@ import { DelaysPage } from "@/pages/delays/DelaysPage";
 import { VisitsPage } from "@/pages/visits/VisitsPage";
 import { CamerasPage } from "@/pages/cameras/CamerasPage";
 import { BellPage } from "@/pages/bell/BellPage";
+import { QuickActionsPage } from "@/pages/QuickActions";
+import { Toaster } from "@/components/ui/toaster";
 import type { ReactNode } from "react";
 
 // Cria instância do React Query
@@ -74,6 +76,7 @@ function AppRoutes() {
         }
       >
         <Route path="/" element={<DashboardPage />} />
+        <Route path="/quick-actions" element={<QuickActionsPage />} />
         <Route path="/students" element={<StudentsPage />} />
         <Route path="/guardians" element={<GuardiansPage />} />
         <Route path="/visitors" element={<VisitorsPage />} />
@@ -100,6 +103,7 @@ export default function App() {
       <BrowserRouter>
         <AuthProvider>
           <AppRoutes />
+          <Toaster />
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

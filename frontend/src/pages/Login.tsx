@@ -1,35 +1,35 @@
-// Login Page - Tela de autenticação institucional
-
-import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { LogIn, AlertCircle } from "lucide-react";
+import { useState, type FormEvent } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "@/context/AuthContext"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { LogIn, AlertCircle, Eye, EyeOff } from "lucide-react"
 
 export function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const { login } = useAuth()
+  const navigate = useNavigate()
 
   async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
 
     try {
-      await login(email, password);
-      navigate("/");
+      await login(email, password)
+      navigate("/")
     } catch (err: any) {
-      const message = err.response?.data?.error?.message || "Erro ao fazer login. Verifique suas credenciais.";
-      setError(message);
+      const message =
+        err.response?.data?.error?.message || "Email ou senha incorretos. Verifique suas credenciais e tente novamente."
+      setError(message)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
@@ -41,21 +41,17 @@ export function LoginPage() {
             <LogIn className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl">Sistema de Portaria</CardTitle>
-          <CardDescription>
-            Fundação Educacional João XXIII
-          </CardDescription>
+          <CardDescription>Fundação Educacional João XXIII</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Mensagem de erro */}
             {error && (
               <div className="flex items-center gap-2 bg-destructive/10 text-destructive text-sm p-3 rounded-md">
                 <AlertCircle className="h-4 w-4 shrink-0" />
-                {error}
+                <span>{error}</span>
               </div>
             )}
 
-            {/* Campo de email */}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -66,34 +62,43 @@ export function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
+                className="h-11"
               />
             </div>
 
-            {/* Campo de senha */}
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Sua senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Sua senha"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="h-11 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
-            {/* Botão de login */}
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Entrando..." : "Entrar"}
+            <Button type="submit" className="w-full min-h-[44px] text-base" disabled={isLoading}>
+              {isLoading ? "Entrando..." : "Entrar no Sistema"}
             </Button>
           </form>
 
-          {/* Rodapé do card de login */}
           <p className="text-xs text-muted-foreground text-center mt-6">
             Sistema de Portaria - João XXIII | Desenvolvido pela MADev
           </p>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

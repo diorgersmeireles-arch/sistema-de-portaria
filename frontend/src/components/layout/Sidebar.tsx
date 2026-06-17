@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard,
+  Zap,
   Users,
   UserCheck,
   UserPlus,
@@ -29,6 +30,7 @@ interface NavItem {
 // Itens de navegação disponíveis no sistema
 const navItems: NavItem[] = [
   { label: "Dashboard", path: "/", icon: LayoutDashboard },
+  { label: "Ações Rápidas", path: "/quick-actions", icon: Zap, permission: "write_visitantes" },
   { label: "Alunos", path: "/students", icon: Users, permission: "write_alunos" },
   { label: "Responsáveis", path: "/guardians", icon: UserCheck, permission: "write_responsaveis" },
   { label: "Visitantes", path: "/visitors", icon: UserPlus, permission: "write_visitantes" },
